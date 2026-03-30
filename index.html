@@ -131,7 +131,7 @@ async function search(){
   try{
 
     // 🔥 IMPORTANT CHANGE (Vercel API)
-    let data = await fetchData("/api/challan?num="+num);
+    let data = await fetchData("/api/challan?num=" + num);
 
     let challans=data?.data || [];
 
