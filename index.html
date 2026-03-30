@@ -105,6 +105,20 @@ function fmt(date){
   return new Date(date).toLocaleString("en-IN");
 }
 
+// 🔥 retry + stable fetch
+async function fetchData(url){
+  for(let i=0;i<3;i++){
+    try{
+      let res=await fetch(url);
+      let text=await res.text();
+      return JSON.parse(text);
+    }catch{
+      await new Promise(r=>setTimeout(r,2000));
+    }
+  }
+  throw "fail";
+}
+
 async function search(){
 
   let num=document.getElementById("num").value.trim().toUpperCase();
@@ -112,15 +126,12 @@ async function search(){
 
   if(!num) return alert("Enter vehicle number");
 
-  box.innerHTML='<div class="loader">⏳ Loading...</div>';
+  box.innerHTML='<div class="loader">⏳ Fetching data...</div>';
 
   try{
 
-    let res=await fetch(
-      "https://vehicle-chalan-check-api-by-abhigyan.onrender.com/api/challan?vehicle_number="+num
-    );
-
-    let data=await res.json();
+    // 🔥 IMPORTANT CHANGE (Vercel API)
+    let data = await fetchData("/api/challan?num="+num);
 
     let challans=data?.data || [];
 
@@ -165,7 +176,10 @@ async function search(){
     box.innerHTML=html;
 
   }catch(e){
-    box.innerHTML="❌ API slow / failed. Try again.";
+    box.innerHTML=`
+      ❌ Server slow / API failed<br><br>
+      <button onclick="search()">Retry</button>
+    `;
   }
 }
 
