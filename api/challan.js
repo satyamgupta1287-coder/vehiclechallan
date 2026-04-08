@@ -2,7 +2,7 @@ export default async function handler(req, res) {
   const { vehicle } = req.query;
 
   if (!vehicle) {
-    return res.status(400).json({ error: "Vehicle required" });
+    return res.status(400).json({ error: "Vehicle number required" });
   }
 
   try {
@@ -10,12 +10,26 @@ export default async function handler(req, res) {
       `https://vehicle-chalan-check-api-by-abhigyan.onrender.com/api/challan?vehicle_number=${vehicle}`
     );
 
-    const data = await response.json();
+    const text = await response.text();
 
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.status(200).json(data);
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      return res.status(500).json({ error: "Invalid API response" });
+    }
 
-  } catch {
-    res.status(500).json({ error: "Failed to fetch" });
+    // 🔥 HANDLE DIFFERENT FORMATS
+    if (!Array.isArray(data)) {
+      data = data.data || data.result || [];
+    }
+
+    return res.status(200).json(data);
+
+  } catch (err) {
+    return res.status(500).json({
+      error: "Backend error",
+      message: err.message
+    });
   }
 }
